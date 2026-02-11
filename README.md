@@ -1,6 +1,6 @@
 # 🌊 Калькулятор индекса уязвимости береговой зоны (CVI)
 
-![Красивая картинка](img/head_img.png)
+![Красивая картинка](img/head_img.jpg)
 
 ---
 
@@ -20,7 +20,7 @@
 ---
 
 
-[![Python 3.12+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Лицензия: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
@@ -40,8 +40,8 @@
 - [Результаты](#результаты)
 - [Методология](#методология)
 - [Примеры](#примеры)
-- [Участие в разработке](#участие-в-разработке)
 - [Лицензия](#лицензия)
+- [Цитирование](#Цитирование)
 - [Список литературы](#список-литературы)
 
 ---
@@ -89,7 +89,7 @@ cvi-calculator/
 │   ├── config.py                 # Загрузчик конфигурации
 │   ├── preprocessing.py          # Очистка данных, перепроецирование, обрезка
 │   ├── ranking.py                # Реклассификация переменных (1–5)
-│   └── transects.py              # Сегментация береговой линии и генерация трансектов
+│   ├── transects.py              # Сегментация береговой линии и генерация трансектов
 │   └── ...                       # сама программа
 ├── data/
 │   ├── raw/                      # Исходные входные данные
@@ -336,6 +336,21 @@ gdf.to_file("outputs/cvi_result.gpkg", driver="GPKG")
 ## Лицензия
 
 Проект распространяется по лицензии MIT — подробности в файле [LICENSE](LICENSE).
+
+---
+
+## Цитирование
+
+Если вы используете этот пакет, то, пожалуйста, процитируйте:
+
+```bibtex
+@software{CVIcalculator2026,
+  title={CVI-calculator},
+  author={Vystrchil, Mikhail},
+  year={2026},
+  url={https://github.com/Ratven666/MetodsOfAnalyzeUrbanData},
+}
+```
 
 ---
 
