@@ -1,22 +1,26 @@
 import datetime as dt
 import re
+from abc import ABC
 from typing import Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import pandas as pd
 
-from abc import ABC
-
-from ..exeptions import InvalidCoordinateError, InvalidTimezoneError, InvalidDateFormatError
+from ..exeptions import (
+    InvalidCoordinateError,
+    InvalidDateFormatError,
+    InvalidTimezoneError,
+)
 
 
 class BaseDataAggregator(ABC):
 
-    def __init__(self,
-                 latitude: float,
-                 longitude: float,
-                 timezone: str = "Europe/Moscow",
-                 ) -> None:
+    def __init__(
+        self,
+        latitude: float,
+        longitude: float,
+        timezone: str = "Europe/Moscow",
+    ) -> None:
         """Агрегатор метеоданных Open-Meteo.
 
         Args:
@@ -79,16 +83,15 @@ class BaseDataAggregator(ABC):
             return dt.datetime.strptime(date_str, "%Y-%m-%d")
         except ValueError as exc:
             raise InvalidDateFormatError(
-                f"Invalid date '{date_str}'. "
-                "Некорректный день/месяц/год."
+                f"Invalid date '{date_str}'. " "Некорректный день/месяц/год."
             ) from exc
 
-
-    def get_daily_data(self,
-                       start_date: dt.date | dt.datetime | str,
-                       end_date: Optional[dt.date | dt.datetime | str] = None,
-                       timeout: int = 120,
-                       ) -> pd.DataFrame:
+    def get_daily_data(
+        self,
+        start_date: dt.date | dt.datetime | str,
+        end_date: Optional[dt.date | dt.datetime | str] = None,
+        timeout: int = 120,
+    ) -> pd.DataFrame:
         """
         Получить ежедневные метеоданные в виде DataFrame.
 

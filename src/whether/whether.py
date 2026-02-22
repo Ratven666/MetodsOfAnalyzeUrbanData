@@ -4,19 +4,20 @@ from typing import Optional
 import pandas as pd
 from loguru import logger
 
+from .data_aggregator import OpenMeteoWhetherDataAggregator
 from .import_export.exporters import ExportWhetherFactory
 from .import_export.importers import ImportWhetherFactory
-from .data_aggregator import OpenMeteoWhetherDataAggregator
 
 
 class Whether:
 
-
-    def __init__(self, latitude: float,
-                 longitude: float,
-                 timezone: str = "Europe/Moscow",
-                 data_aggregator = OpenMeteoWhetherDataAggregator,
-                 ):
+    def __init__(
+        self,
+        latitude: float,
+        longitude: float,
+        timezone: str = "Europe/Moscow",
+        data_aggregator=OpenMeteoWhetherDataAggregator,
+    ):
         """
         Класс для работы с данными о погоде
 
@@ -43,9 +44,7 @@ class Whether:
     def __add_data(self, df: pd.DataFrame) -> None:
         logger.debug("Adding data with shape {}", df.shape)
 
-        def normalize_date_column(
-                df: pd.DataFrame, col: str = "date"
-        ) -> pd.DataFrame:
+        def normalize_date_column(df: pd.DataFrame, col: str = "date") -> pd.DataFrame:
             df = df.copy()
             df[col] = pd.to_datetime(df[col]).dt.date
             return df
@@ -64,10 +63,10 @@ class Whether:
             return
 
     def download_whether_data(
-            self,
-            start_date: dt.date | dt.datetime | str,
-            end_date: Optional[dt.date | dt.datetime | str] = None,
-            timeout: int = 120,
+        self,
+        start_date: dt.date | dt.datetime | str,
+        end_date: Optional[dt.date | dt.datetime | str] = None,
+        timeout: int = 120,
     ) -> pd.DataFrame:
         logger.info(
             "Downloading weather data from {} to {}",
@@ -93,7 +92,9 @@ class Whether:
         return df
 
     def get_statistic_df(self) -> pd.DataFrame:
-        logger.info("Calculating statistics for weather data ({} rows)", len(self._whether_data))
+        logger.info(
+            "Calculating statistics for weather data ({} rows)", len(self._whether_data)
+        )
         stats = self.whether_data.describe()
         logger.debug("Statistics shape: {}", stats.shape)
         return stats

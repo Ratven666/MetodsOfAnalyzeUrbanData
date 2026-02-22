@@ -9,8 +9,7 @@ import pandas as pd
 
 class BaseImporter(ABC):
     @abstractmethod
-    def load(self, path: str | Path) -> Any:
-        ...
+    def load(self, path: str | Path) -> Any: ...
 
 
 class CsvImporter(BaseImporter):
@@ -36,7 +35,6 @@ class ImportWhetherFactory:
         "xls": ExcelImporter,
         "xlsx": ExcelImporter,
         "json": JsonImporter,
-
     }
 
     @classmethod

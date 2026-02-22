@@ -10,8 +10,7 @@ import pandas as pd
 
 class BaseExporter(ABC):
     @abstractmethod
-    def export(self, data: Any, path: str | Path) -> Path:
-        ...
+    def export(self, data: Any, path: str | Path) -> Path: ...
 
 
 class JsonExporter(BaseExporter):
@@ -42,11 +41,12 @@ class ExcelExporter(BaseExporter):
 
 
 class ExportWhetherFactory:
-    _registry: dict[str, type[BaseExporter]] = dict(json=JsonExporter,
-                                                    csv=CsvExporter,
-                                                    xlsx=ExcelExporter,
-                                                    excel=ExcelExporter,
-                                                    )
+    _registry: dict[str, type[BaseExporter]] = dict(
+        json=JsonExporter,
+        csv=CsvExporter,
+        xlsx=ExcelExporter,
+        excel=ExcelExporter,
+    )
 
     @classmethod
     def get(cls, format_: str) -> BaseExporter:
