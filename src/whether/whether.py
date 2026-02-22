@@ -62,6 +62,19 @@ class Whether:
             )
             return
 
+        before = len(self._whether_data)
+        self._whether_data = pd.concat([self._whether_data, df], ignore_index=True)
+        self._whether_data = self._whether_data.drop_duplicates(
+            subset=["date"], keep="first"
+        )
+        after = len(self._whether_data)
+        logger.info(
+            "Weather data updated: {} -> {} rows ({} new unique dates)",
+            before,
+            after,
+            after - before,
+        )
+
     def download_whether_data(
         self,
         start_date: dt.date | dt.datetime | str,

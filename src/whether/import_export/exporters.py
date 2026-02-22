@@ -45,6 +45,7 @@ class ExportWhetherFactory:
         json=JsonExporter,
         csv=CsvExporter,
         xlsx=ExcelExporter,
+        xls=ExcelExporter,
         excel=ExcelExporter,
     )
 
