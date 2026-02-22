@@ -4,10 +4,10 @@ from typing import Optional
 import requests
 import pandas as pd
 
-from whether.data_aggregator.DataAggregatorABC import DataAggregatorABC
+from .BaseDataAggregator import BaseDataAggregator
 
 
-class OpenMeteoWhetherDataAggregator(DataAggregatorABC):
+class OpenMeteoWhetherDataAggregator(BaseDataAggregator):
     # Все 18 доступных дневных переменных
     daily_variables = [
         # Температура
@@ -105,6 +105,7 @@ class OpenMeteoWhetherDataAggregator(DataAggregatorABC):
                 - month (int64): Номер месяца.
                 - day_of_year (int64): Номер дня в году.
         """
+        super().get_daily_data(start_date, end_date)
         data_json = self._get_daily_data_json(
             start_date,
             end_date=end_date,
