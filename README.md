@@ -150,10 +150,10 @@ conda activate cvi
 ## Быстрый старт
 
 ```python
-from app.config import load_config
-from app.preprocessing import prepare_layers
-from app.cvi import compute_cvi
-from app.visualization import plot_cvi_map
+from src.config import load_config
+from src.preprocessing import prepare_layers
+from src.cvi import compute_cvi
+from src.visualization import plot_cvi_map
 
 # 1. Загрузка конфигурации
 cfg = load_config("config.yaml")
@@ -171,7 +171,7 @@ plot_cvi_map(cvi_result, output="outputs/maps/cvi_map.png")
 ### Запуск через командную строку
 
 ```bash
-python -m app.cvi \
+python -m src.cvi \
     --config config/default_config.yaml \
     --output outputs/cvi_result.gpkg
 ```
@@ -315,7 +315,7 @@ jupyter notebook notebooks/example_workflow.ipynb
 
 ```python
 import geopandas as gpd
-from app.cvi import compute_cvi_from_geodataframe
+from src.cvi import compute_cvi_from_geodataframe
 
 # Загрузка предварительно ранжированных трансектов
 gdf = gpd.read_file("data/processed/ranked_transects.gpkg")

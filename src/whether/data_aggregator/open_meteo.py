@@ -1,19 +1,48 @@
 import datetime as dt
-from typing import Iterable, Optional
+from typing import Optional
 
 import requests
 import pandas as pd
 
-from app.wheather.constants import DAILY_VARIABLES
+from whether.data_aggregator.DataAggregatorABC import DataAggregatorABC
 
 
-class OpenMeteoWheatherDataAggregator:
+class OpenMeteoWhetherDataAggregator(DataAggregatorABC):
+    # Все 18 доступных дневных переменных
+    daily_variables = [
+        # Температура
+        "temperature_2m_max",
+        "temperature_2m_min",
+        "apparent_temperature_max",
+        "apparent_temperature_min",
+
+        # Осадки
+        "precipitation_sum",
+        "rain_sum",
+        "snowfall_sum",
+        "precipitation_hours",
+
+        # Ветер
+        "wind_speed_10m_max",
+        "wind_gusts_10m_max",
+        "wind_direction_10m_dominant",
+
+        # Солнце
+        "sunrise",
+        "sunset",
+        "sunshine_duration",
+        "daylight_duration",
+        "shortwave_radiation_sum",
+
+        # Прочее
+        "et0_fao_evapotranspiration",
+        "weather_code",
+    ]
 
     def __init__(self,
                  latitude: float,
                  longitude: float,
                  timezone: str = "Europe/Moscow",
-                 daily_variables: Iterable[str] = DAILY_VARIABLES,
                 ) -> None:
         """Агрегатор метеоданных Open-Meteo.
 
@@ -22,14 +51,9 @@ class OpenMeteoWheatherDataAggregator:
             longitude (float): Долгота точки в координатах WGS84.
             timezone (str, optional): Часовой пояс для агрегации суточных данных.
                 Любое имя из базы IANA, по умолчанию 'Europe/Moscow'.
-            daily_variables (Iterable[str], optional): Список суточных переменных,
-                которые нужно запрашивать в API.
-
         """
-        self.latitude = latitude
-        self.longitude = longitude
-        self.timezone = timezone
-        self.daily_variables = list(daily_variables)
+        super().__init__(latitude, longitude, timezone)
+        
         
     def __get_params(self, start_date, end_date):
         params = {
@@ -80,9 +104,6 @@ class OpenMeteoWheatherDataAggregator:
                 - year (int64): Год.
                 - month (int64): Номер месяца.
                 - day_of_year (int64): Номер дня в году.
-                - temperature_2m_mean (float64): Средняя суточная температура,
-                рассчитанная как полусумма max и min.
-
         """
         data_json = self._get_daily_data_json(
             start_date,
@@ -102,8 +123,7 @@ class OpenMeteoWheatherDataAggregator:
         df["year"] = df["date"].dt.year
         df["month"] = df["date"].dt.month
         df["day_of_year"] = df["date"].dt.dayofyear
-        df["temperature_2m_mean"] = (
-            df["temperature_2m_max"] + df["temperature_2m_min"]
-        ) / 2
 
         return df
+
+
