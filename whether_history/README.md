@@ -1,10 +1,8 @@
-# MetodsOfAnalyzeUrbanData — HW3: Библиотека `whether`
-
-![Красивая картинка](img/head_img.jpg)
+# MetodsOfAnalyzeUrbanData — HW4: Библиотека `whether_history`
 
 ---
 
-Библиотека `whether` — учебный Python‑пакет для работы с суточными метеоданными.  
+Пакет `whether_history` — учебный Python‑пакет для работы с историческими суточными метеоданными.  
 
 
 Рещаемая задача: загрузка данных погоды из API Open‑Meteo, объединение, сохранение в файлы и базовый анализ (статистика).
