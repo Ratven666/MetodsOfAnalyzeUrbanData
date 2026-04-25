@@ -14,7 +14,7 @@ class BaseExporter(ABC):
 
 
 class JsonExporter(BaseExporter):
-    def export(self, data: [pd.DataFrame | dict], path: str | Path) -> Path:
+    def export(self, data: pd.DataFrame | dict, path: str | Path) -> Path:
         path = Path(path)
         if isinstance(data, pd.DataFrame):
             data.to_json(path, orient="records", force_ascii=False, indent=2)
@@ -40,6 +40,14 @@ class ExcelExporter(BaseExporter):
         return path
 
 
+class ParquetExporter(BaseExporter):
+    def export(self, data: pd.DataFrame, path: str | Path) -> Path:
+        path = Path(path)
+        # engine=None — pandas сам выберет pyarrow/fastparquet, если установлены
+        data.to_parquet(path, index=False, engine=None)
+        return path
+
+
 class ExportWhetherFactory:
     _registry: dict[str, type[BaseExporter]] = dict(
         json=JsonExporter,
@@ -47,6 +55,8 @@ class ExportWhetherFactory:
         xlsx=ExcelExporter,
         xls=ExcelExporter,
         excel=ExcelExporter,
+        parquet=ParquetExporter,
+        pq=ParquetExporter,
     )
 
     @classmethod
@@ -57,7 +67,10 @@ class ExportWhetherFactory:
         return cls._registry[key]()
 
     @classmethod
-    def export(cls, data: pd.DataFrame | dict, file_path: str | Path) -> None:
-        format_ = Path(file_path).suffix
-        exporter = cls.get(format_=format_[1:])
-        exporter.export(data, file_path)
+    def export(cls, data: pd.DataFrame | dict, file_path: str | Path) -> Path:
+        path = Path(file_path)
+        suffix = path.suffix  # например, ".parquet"
+        if not suffix:
+            raise ValueError(f"File '{file_path}' has no extension")
+        exporter = cls.get(format_=suffix[1:])
+        return exporter.export(data, path)

@@ -123,3 +123,13 @@ class OpenMeteoWhetherDataAggregator(BaseDataAggregator):
         df["day_of_year"] = df["date"].dt.dayofyear
 
         return df
+
+
+class OpenMeteoWindDataAggregator(OpenMeteoWhetherDataAggregator):
+    # Все 18 доступных дневных переменных
+    daily_variables = [
+        # Ветер
+        "wind_speed_10m_max",
+        "wind_gusts_10m_max",
+        "wind_direction_10m_dominant",
+    ]
