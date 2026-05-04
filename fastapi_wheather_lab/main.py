@@ -1,51 +1,91 @@
 """
-Точка входа приложения FastAPI.
+Точка входа FastAPI-приложения
 
 Порядок инициализации:
-  1. Создаётся объект AppConfig (читает переменные среды один раз).
-  2. На основе AppConfig создаётся объект FastAPI с метаданными.
-  3. Подключаются роутеры.
-  4. Приложение запускается uvicorn-ом.
+  1. lifespan создаёт DependencyContainer через init_dependencies().
+  2. Контейнер сохраняется в app.state.deps — единственное место хранения.
+  3. Функции-провайдеры (dependencies.py) достают объекты из контейнера
+     через Depends в маршрутах.
 
-Ключевая идея разделения конфигураций:
-  - AppConfig     → читается при старте, ЗАМОРОЖЕНА на время жизни процесса.
-  - RuntimeConfig → singleton, обновляется через PUT /config/runtime.
+Запуск:
+    uvicorn fastapi_wheather_lab.main:app --reload
+
+Документация:
+    http://127.0.0.1:8000/docs
 """
 
+from __future__ import annotations
+
 import os
-import sys
+from contextlib import asynccontextmanager
 
-sys.path.insert(0, os.path.dirname(__file__))
-
-from config import AppConfig
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes.config_routes import router as config_router
-from routes.health import router as health_router
-from routes.info import router as info_router
+from fastapi.responses import RedirectResponse
 
-# 1. Инициализация статической конфигурации
-app_config = AppConfig()
+from fastapi_wheather_lab.init_dependencies import init_dependencies
+from fastapi_wheather_lab.routes.config import router as config_router
+from fastapi_wheather_lab.schemas.app_config import AppConfigModel
 
-# 2. Создание объекта FastAPI с метаданными из статической конфигурации.
-#    После этой строки изменение app_config НЕ влияет на объект FastAPI.
+# ── Lifespan: инициализация и завершение ──────────────────────────────────
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Жизненный цикл приложения.
+
+    startup:  создаёт DependencyContainer и сохраняет в app.state.deps.
+    shutdown: выводит сообщение о завершении.
+    """
+    deps = init_dependencies()
+    app.state.deps = deps
+
+    # Получаем статическую конфигурацию из контейнера для вывода при старте
+    app_cfg: AppConfigModel = deps.get_dep("app_config", AppConfigModel)
+    print(f"\n[STARTUP] {app_cfg.app_name!r} v{app_cfg.app_version} запущено.")
+    print("[STARTUP] Приложение готово к работе с множеством точек.")
+    print("[STARTUP] Документация: http://127.0.0.1:8000/docs")
+    print(f"[STARTUP] Контейнер зависимостей: {deps}\n")
+
+    yield  # ← приложение работает
+
+    print(f"\n[SHUTDOWN] {app_cfg.app_name!r} остановлено.")
+
+
+# ── Создание приложения ────────────────────────────────────────────────────
+
+# Статическая конфигурация читается ОДИН РАЗ для метаданных FastAPI.
+# После создания объекта app изменение _startup_cfg не влияет на app.title.
+_startup_cfg = AppConfigModel()
+
 app = FastAPI(
-    title=app_config.app_name,
-    version=app_config.app_version,
-    description=app_config.app_description,
+    lifespan=lifespan,
+    title=_startup_cfg.app_name,
+    version=_startup_cfg.app_version,
+    description=_startup_cfg.app_description,
     contact={
-        "name": ", ".join(app_config.app_authors),
-        "email": app_config.contact_email,
+        "name": ", ".join(_startup_cfg.app_authors),
+        "email": _startup_cfg.contact_email,
     },
-    license_info={"name": app_config.license_name},
     openapi_tags=[
-        {"name": "Health", "description": "Проверка работоспособности сервиса"},
-        {"name": "Configuration", "description": "Управление конфигурацией приложения"},
-        {"name": "Info", "description": "Информационные эндпоинты"},
+        {
+            "name": "configuration",
+            "description": "Управление статической и runtime-конфигурацией приложения",
+        },
     ],
 )
 
-# 3. Middleware
+# Демонстрация иммутабельности статической конфигурации:
+# изменение _startup_cfg ПОСЛЕ создания app не меняет app.title
+_startup_cfg.app_name = "CHANGED_AFTER_INIT"
+assert (
+    app.title != "CHANGED_AFTER_INIT"
+), "Статическая конфигурация не должна изменять уже созданный объект FastAPI!"
+
+
+# ── Middleware ─────────────────────────────────────────────────────────────
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -53,39 +93,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 4. Подключение роутеров
-app.include_router(health_router)
+
+# ── Маршруты ──────────────────────────────────────────────────────────────
+
+
+@app.get("/", include_in_schema=False)
+async def root():
+    """Редирект на документацию Swagger UI."""
+    return RedirectResponse(url="/docs")
+
+
+@app.get("/ping", tags=["configuration"], summary="Пинг сервера")
+async def ping() -> str:
+    """Простая проверка доступности сервера."""
+    return "pong"
+
+
+# Основные маршруты (health, /config/app, /config/runtime)
 app.include_router(config_router)
-app.include_router(info_router)
-
-# 5. Демонстрация иммутабельности статической конфигурации:
-#    изменение app_config после создания app НЕ меняет app.title
-app_config.app_name = "CHANGED_AT_RUNTIME"
-assert (
-    app.title != "CHANGED_AT_RUNTIME"
-), "Статическая конфигурация не должна изменять уже созданный объект FastAPI!"
 
 
-# 6. События жизненного цикла
-@app.on_event("startup")
-async def on_startup():
-    print(f"[STARTUP] Приложение '{app.title}' v{app.version} запущено.")
-    print(f"[STARTUP] Документация: http://127.0.0.1:8000/docs")
+# ── Запуск через CLI ───────────────────────────────────────────────────────
 
-
-@app.on_event("shutdown")
-async def on_shutdown():
-    print(f"[SHUTDOWN] Приложение '{app.title}' остановлено.")
-
-
-# 7. Запуск через CLI: python main.py
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        "main:app",
+        "fastapi_wheather_lab.main:app",
         host=os.getenv("HOST", "0.0.0.0"),
         port=int(os.getenv("PORT", "8000")),
-        reload=os.getenv("RELOAD", "false").lower() == "true",
+        reload=os.getenv("RELOAD", "true").lower() == "true",
         log_level=os.getenv("LOG_LEVEL", "info").lower(),
     )
