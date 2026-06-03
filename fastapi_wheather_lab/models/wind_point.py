@@ -11,6 +11,8 @@ from fastapi_wheather_lab.db.base import Base
 
 
 class WindPoint(Base):
+    """ORM-модель таблицы wind_points."""
+
     __tablename__ = "wind_points"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -19,8 +21,15 @@ class WindPoint(Base):
     description: Mapped[str | None] = mapped_column(String(500), nullable=True)
     source: Mapped[str | None] = mapped_column(String(255), nullable=True)
     shore_normal_azimuth_deg: Mapped[Decimal | None] = mapped_column(Numeric(6, 2), nullable=True)
-    geom = mapped_column(Geometry(geometry_type="POINT", srid=4326, spatial_index=False), nullable=False)
+    geom = mapped_column(
+        Geometry(geometry_type="POINT", srid=4326, spatial_index=False),
+        nullable=False,
+    )
     measurement_height_m: Mapped[Decimal | None] = mapped_column(Numeric(6, 2), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
-    measurements: Mapped[list[WindMeasurement]] = relationship(back_populates="point", cascade="all, delete-orphan")
+    measurements: Mapped[list[WindMeasurement]] = relationship(  # noqa: F821
+        back_populates="point", cascade="all, delete-orphan"
+    )

@@ -12,16 +12,19 @@ router = APIRouter(tags=["wind-research"])
 @router.get(
     "/wind/points",
     response_model=list[WindPointDBResponse],
-    summary="Список точек наблюдений ветра",
+    summary="Список точек наблюдений ветра (legacy — через WindDBService)",
+    description="Устаревший маршрут. Для полного CRUD используйте /wind/points из CRUD-роутера.",
+    deprecated=True,
 )
-def list_wind_points(service: WindDBService = Depends(get_wind_db_service)) -> list[WindPointDBResponse]:
+def list_wind_points_legacy(service: WindDBService = Depends(get_wind_db_service)) -> list[WindPointDBResponse]:
     return service.list_points()
 
 
 @router.get(
     "/wind/measurements",
     response_model=list[WindMeasurementResponse],
-    summary="Список измерений ветра",
+    summary="Список всех измерений ветра (legacy — через WindDBService)",
+    deprecated=True,
 )
-def list_wind_measurements(service: WindDBService = Depends(get_wind_db_service)) -> list[WindMeasurementResponse]:
+def list_wind_measurements_legacy(service: WindDBService = Depends(get_wind_db_service)) -> list[WindMeasurementResponse]:
     return service.list_measurements()
