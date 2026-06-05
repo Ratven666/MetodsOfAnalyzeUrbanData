@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: urban_wind_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-urban_wind_data}
+      POSTGRES_USER: ${POSTGRES_USER:-urban_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-urban_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - urban_wind_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      # pg_isready проверяет готовность PostgreSQL к подключениям
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: urban_wind_api
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        # API стартует только после того, как db пройдёт healthcheck
+        condition: service_healthy
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn fastapi_wheather_lab.main:app --host 0.0.0.0 --port 8000"
+    restart: on-failure
+
+volumes:
+  urban_wind_pg_data:
+    # Именованный volume — данные сохраняются между перезапусками контейнера
